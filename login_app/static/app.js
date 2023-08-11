@@ -18,6 +18,15 @@ let expArray = [];
 
 
 // Add Budget To Respective Feilds 
+const csrfToken = getCookie('csrftoken'); // Replace with actual function to get the CSRF token
+fetch(url, {
+    method: 'POST',
+    headers: {
+        'X-CSRFToken': csrfToken
+    },
+    body: JSON.stringify(data)
+});
+
 
 add_budget_btn.addEventListener(
     'click', (e) => {
