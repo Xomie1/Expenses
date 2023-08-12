@@ -149,4 +149,4 @@ CORS_ALLOWED_ORIGINS = [
     # Add any other allowed origins if needed
 ]
 
-CSRF_TRUSTED_ORIGINS = ['expenses-production.up.railway.app']
+CSRF_TRUSTED_ORIGINS = ['https://expenses-production.up.railway.app']
