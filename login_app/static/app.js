@@ -15,6 +15,8 @@ const resetWindow = document.getElementById("reset");
 const date = document.getElementById("date");
 let budgetNumber, expenseNumber;
 let expArray = [];
+let incomeNumber=0;
+
 
 
 // Add Budget To Respective Feilds 
@@ -28,22 +30,19 @@ let expArray = [];
 // });
 
 
-add_budget_btn.addEventListener(
-    'click', (e) => {
-        e.preventDefault();
-        if (budgetFeild.value > 0) {
-            budget.innerText = `NGN ${Number(budgetFeild.value).toFixed(2)}`;
-            currentAmount.innerText = `NGN ${Number(budgetFeild.value).toFixed(2)}`;
-            budgetNumber = Number(budgetFeild.value);
-            expenseAmount.innerText = 'NGN 00,00';
-            expense.innerText = `NGN 00,000`;
-            expArray.length = 0;
-
-        }
-        else
-            alert("Please Enter Your Budget Amount..");
-    }
-);
+add_budget_btn.addEventListener('click', (e) => {
+  e.preventDefault();
+  if (budgetFeild.value > 0) {
+    // Add the new budget amount to the existing incomeNumber
+    incomeNumber += parseFloat(budgetFeild.value);
+    budgetNumber = incomeNumber;
+    budget.innerText = `NGN ${incomeNumber.toFixed(2)}`;
+    currentAmount.innerText = `NGN ${incomeNumber.toFixed(2)}`;
+    // ...
+  } else {
+    alert("Please Enter Your Budget Amount..");
+  }
+});
 
 // Function to Create Expense List
 
@@ -172,23 +171,17 @@ add_expense_btn.addEventListener('click', (e) => {
 // Function To Calculate Budget and Expense:
 
 const updateBudget = () => {
-
-    if (budgetNumber >= expenseAmount.value) {
-        let currentBalanceNumber = budgetNumber - expenseNumber;
-        budgetNumber = currentBalanceNumber;
-        let currentExpenceNumber = expArray.reduce(
-            (a, b) => {
-                return a + b;
-            }
-        );
-        expenseNumber = currentExpenceNumber;
-        currentAmount.innerText = `NGN ${(currentBalanceNumber).toFixed(2)}`;
-        expense.innerText = `NGN ${(currentExpenceNumber).toFixed(2)}`;
-    }
-
-    else
-        alert("You Dont Have Enough balance");
-}
+  if (budgetNumber >= expenseAmount.value) {
+      let currentBalanceNumber = budgetNumber - expenseNumber;
+      budgetNumber = currentBalanceNumber;
+      let currentExpenceNumber = expArray.reduce((a, b) => a + b);
+      expenseNumber = currentExpenceNumber;
+      currentAmount.innerText = `NGN ${(currentBalanceNumber).toFixed(2)}`;
+      expense.innerText = `NGN ${(currentExpenceNumber).toFixed(2)}`;
+  } else {
+      alert("You Don't Have Enough Balance");
+  }
+};
 
 
 //Add Button To Reload Page
@@ -206,39 +199,45 @@ function reset() {
     expenseAmount.value = "";
     expenseDesc.value = "";
     expenseTitle.value = "";
+    incomeNumber = 0;
 }
 
 // Function to Export CSV
 // // Function to export the expense data as a CSV file
 const exportCSV = () => {
-    // Create CSV data string
-    let csvContent = "data:text/csv;charset=utf-8,";
-    csvContent += "Expense Title,Expense Description,Expense Amount,Date\n";
-    
-    // Iterate over expense items and add data to CSV
-    const expenseItems = document.querySelectorAll(".list-expense-title-desc");
-    expenseItems.forEach(item => {
-      const title = item.querySelector(".list-expense-title").innerText;
-      const desc = item.querySelector(".list-expense-desc").innerText;
-      const amount = item.querySelector("span").innerText;
-      const date = item.querySelector(".date").innerText;
-      const rowData = `${title},${desc},${amount},${date}\n`;
-      csvContent += rowData;
-    });
-    
-    // Create a temporary link element and download the CSV file
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "expenses.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  }
+  // Create CSV data string
+  let csvContent = "data:text/csv;charset=utf-8,";
+  csvContent += "Total Balance\n";
   
-  // Add event listener to the export CSV button
-  const exportCSVButton = document.querySelector("#exportCSV");
+  // Add the current income amount and total balance to the CSV
+  csvContent += `${budgetNumber}\n`;
+  
+  // Add column headers for expense data
+  csvContent += "Expense Title,Expense Description,Expense Amount,Date\n";
+  
+  // Iterate over expense items and add data to CSV
+  const expenseItems = document.querySelectorAll(".list-expense-title-desc");
+  expenseItems.forEach(item => {
+    const title = item.querySelector(".list-expense-title").innerText;
+    const desc = item.querySelector(".list-expense-desc").innerText;
+    const amount = item.querySelector("span").innerText;
+    const date = item.querySelector(".date").innerText;
+    const rowData = `${title},${desc},${amount},${date}\n`;
+    csvContent += rowData;
+  });
+  
+  // Create a temporary link element and download the CSV file
+  const encodedUri = encodeURI(csvContent);
+  const link = document.createElement("a");
+  link.setAttribute("href", encodedUri);
+  link.setAttribute("download", "expenses.csv");
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
 
+// Add event listener to the export CSV button
+const exportCSVButton = document.querySelector("#exportCSV");
 exportCSVButton.addEventListener("click", () => {
   // Temporarily remove the event listener from the Add Expense button
   add_expense_btn.removeEventListener("click", exportCSV);
@@ -353,6 +352,21 @@ function updateChart() {
   // Initialize the charts
   var barChart = buildBarChart("Expenses", [], []);
   var polarAreaChart = buildPolarAreaChart("Expenses", [], []);
+
+  $(document).ready(function() {
+    // Fetch expenses using AJAX
+    $.ajax({
+        url: '',  // URL to your expense list view
+        method: 'GET',
+        success: function(data) {
+            $('#expenseList').html(data);  // Update the expense list with retrieved data
+        },
+        error: function(error) {
+            console.log('Error fetching expenses:', error);
+        }
+    });
+});
+
   
   updateChart();
   
